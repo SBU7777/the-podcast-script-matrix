@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SBU Episode Creation System</title>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --surface: #171a1f;
+      --surface-2: #20242b;
+      --surface-3: #2a2f37;
+      --line: #343a44;
+      --text: #f1f0eb;
+      --muted: #a9b0ba;
+      --soft: #c9ccd1;
+      --warm: #c99a4a;
+      --warm-2: #f0c66b;
+      --steel: #6f879c;
+      --moss: #7d9b76;
+      --danger: #d66c5f;
+      --ok: #79b786;
+      --focus: #f2c76e;
+      --shadow: 0 18px 55px rgba(0, 0, 0, .34);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(201, 154, 74, .08), transparent 240px),
+        radial-gradient(circle at 18% 4%, rgba(111, 135, 156, .16), transparent 280px),
+        var(--bg);
+      line-height: 1.5;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(242, 199, 110, .65);
+      outline-offset: 2px;
+    }
+
+    .app {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      padding: 10px 0 18px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(240, 198, 107, .35);
+      background: linear-gradient(145deg, rgba(201,154,74,.22), rgba(111,135,156,.14));
+      color: var(--warm-2);
+      font-weight: 800;
+      border-radius: 8px;
+      margin-right: 12px;
+      vertical-align: middle;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 5px;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+    .tagline {
+      color: var(--warm-2);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      border-radius: 8px;
+      min-height: 42px;
+      padding: 9px 13px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .btn:hover { border-color: var(--warm); }
+    .btn.primary {
+      border-color: rgba(240,198,107,.35);
+      background: linear-gradient(135deg, #b47a31, #725f43);
+      color: white;
+    }
+    .btn.danger { border-color: rgba(214,108,95,.45); color: #ffd8d3; }
+    .btn.small { min-height: 34px; padding: 6px 10px; font-size: 13px; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .sidebar, .panel {
+      background: rgba(23, 26, 31, .94);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .sidebar {
+      align-self: start;
+      position: sticky;
+      top: 14px;
+      padding: 14px;
+    }
+
+    .episode-title-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 10px 12px;
+    }
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+    .short-textarea { min-height: 68px; }
+    .long-textarea { min-height: 260px; }
+
+    .episode-list {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+    .episode-item {
+      text-align: left;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .episode-item.active {
+      border-color: var(--warm);
+      background: rgba(201,154,74,.12);
+    }
+    .episode-item strong { display: block; }
+    .episode-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .stage-nav {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+    .stage-btn {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .stage-btn.active {
+      border-color: var(--warm);
+      background: rgba(201,154,74,.14);
+    }
+    .stage-num {
+      display: grid;
+      place-items: center;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--surface-3);
+      color: var(--warm-2);
+      font-weight: 800;
+    }
+    .stage-status {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .voice-card {
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding-top: 14px;
+      color: var(--soft);
+      font-size: 13px;
+    }
+    .voice-card strong { color: var(--warm-2); }
+
+    .panel {
+      min-height: 680px;
+      padding: 22px;
+    }
+
+    .stage-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+    .eyebrow {
+      color: var(--warm-2);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+    .stage-header h2 {
+      margin-bottom: 7px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+    .stage-header p {
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .field, .subpanel {
+      background: rgba(32,36,43,.74);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .field.full, .subpanel.full { grid-column: 1 / -1; }
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 7px 0 0;
+    }
+
+    .stage-controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .right-controls, .left-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chat-box {
+      display: grid;
+      gap: 12px;
+    }
+    .question-card {
+      border-left: 4px solid var(--warm);
+      background: rgba(201,154,74,.09);
+      padding: 14px;
+      border-radius: 8px;
+    }
+    .qa-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .qa-item {
+      background: rgba(13,15,18,.55);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .qa-item b { color: var(--warm-2); }
+
+    .output {
+      white-space: pre-wrap;
+      background: #101216;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      color: #f4f0e7;
+      min-height: 220px;
+      max-height: 620px;
+      overflow: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .notice {
+      border: 1px solid rgba(111,135,156,.35);
+      background: rgba(111,135,156,.12);
+      color: var(--soft);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .warning {
+      border-color: rgba(214,108,95,.4);
+      background: rgba(214,108,95,.12);
+    }
+    .success {
+      border-color: rgba(121,183,134,.45);
+      background: rgba(121,183,134,.12);
+    }
+
+    .quality-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .quality-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      align-items: start;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(13,15,18,.42);
+    }
+    .quality-item.pass .mark { color: var(--ok); }
+    .quality-item.fail .mark { color: var(--danger); }
+    .mark { font-weight: 900; }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .pill {
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--soft);
+      background: rgba(255,255,255,.04);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--surface-2);
+      border: 1px solid var(--warm);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 11px 13px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: .2s ease;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 980px) {
+      .topbar, .workspace, .stage-header, .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+      .sidebar { position: static; }
+      .actions, .stage-controls { justify-content: flex-start; }
+    }
+
+    @media (max-width: 620px) {
+      .app { padding: 14px; }
+      .panel { padding: 16px; }
+      .stage-controls { display: grid; }
+      .right-controls, .left-controls { width: 100%; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="tagline"><span class="brand-mark">SBU</span>Real Men. Real Struggles. Real Hope.</p>
+        <h1>Episode Creation System</h1>
+        <p class="subtitle">Turn a real question, a real story, biblical truth, and brotherhood into one meaningful Struggling Brothers United episode.</p>
+      </div>
+      <div class="actions">
+        <span class="pill" id="systemStatus">Checking system...</span>
+        <button class="btn" id="saveBtn">Save</button>
+        <button class="btn" id="syncBtn">Sync to Disk</button>
+        <button class="btn" id="exportJsonBtn">Export Workspace</button>
+        <button class="btn primary" id="newEpisodeBtn">New Episode</button>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="sidebar" aria-label="Episode workspace">
+        <div class="episode-title-row">
+          <div>
+            <label for="episodeSelect">Saved episodes</label>
+            <select id="episodeSelect"></select>
+          </div>
+          <button class="btn small danger" id="deleteEpisodeBtn">Delete Episode</button>
+        </div>
+
+        <div class="episode-list" id="episodeList"></div>
+
+        <nav class="stage-nav" aria-label="Creation stages" id="stageNav"></nav>
+
+        <div class="voice-card">
+          <strong>SBU Core Voice DNA</strong>
+          <p>Honest, humble, compassionate, hopeful, conversational, and brother-to-brother. No lectures. No judgment. No fake inspiration. No fabricated personal stories. No forced Scripture.</p>
+        </div>
+      </aside>
+
+      <section class="panel" id="stagePanel" aria-live="polite"></section>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "sbu_episode_creation_system_v1";
+    const SERVER_ENABLED = location.protocol.startsWith("http");
+    const stages = [
+      { id: "discover", name: "Discover", short: "Question" },
+      { id: "story", name: "Story", short: "Real story" },
+      { id: "truth", name: "Truth", short: "Scripture" },
+      { id: "build", name: "Build", short: "Episode" },
+      { id: "brotherhood", name: "Brotherhood", short: "Community" }
+    ];
+
+    const storyQuestions = [
+      "Tell me about a time when you personally experienced this struggle.",
+      "Where were you, and what was happening around you?",
+      "What was the specific moment where the weight of it really hit you?",
+      "What were you feeling right there?",
+      "What were you afraid might happen?",
+      "What did you tell yourself in that moment?",
+      "What changed, even if it changed slowly?",
+      "When you look back now, what do you understand that you did not understand then?",
+      "How does that story connect to the central question of this episode?"
+    ];
+
+    const state = {
+      currentEpisodeId: "",
+      currentStage: "discover",
+      episodes: []
+    };
+    let systemStatus = { ok: false, aiAvailable: false, model: "", storage: "" };
+
+    function createEpisode() {
+      const id = "ep-" + Date.now();
+      return {
+        id,
+        updatedAt: new Date().toISOString(),
+        meta: {
+          episodeNumber: "",
+          title: "Untitled SBU Episode",
+          titleIdeas: [],
+          targetLength: "30",
+          audience: "men who feel like they are struggling alone"
+        },
+        discover: {
+          centralQuestion: "",
+          uncomfortableTruth: "",
+          whyItMatters: "",
+          listenerRecognition: "",
+          listenerOutcome: "",
+          emotionalJourney: "",
+          coreTheme: ""
+        },
+        story: {
+          questionIndex: 0,
+          answers: [],
+          draft: "",
+          approved: false
+        },
+        truth: {
+          useScripture: "undecided",
+          scripture: "",
+          translation: "NLT",
+          plainMeaning: "",
+          context: "",
+          crossReferences: "",
+          application: "",
+          whyItFits: "",
+          notes: ""
+        },
+        build: {
+          hostName: "Robert",
+          includeShowNotes: true,
+          includeTimestamps: true,
+          includeTitleIdeas: true,
+          script: "",
+          quality: []
+        },
+        brotherhood: {
+          content: ""
+        }
+      };
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.episodes = Array.isArray(parsed.episodes) ? parsed.episodes : [];
+          state.currentEpisodeId = parsed.currentEpisodeId || "";
+          state.currentStage = parsed.currentStage || "discover";
+        }
+      } catch {
+        state.episodes = [];
+      }
+      if (!state.episodes.length) {
+        const ep = createEpisode();
+        state.episodes.push(ep);
+        state.currentEpisodeId = ep.id;
+      }
+      if (!getEpisode()) state.currentEpisodeId = state.episodes[0].id;
+    }
+
+    function save(showMessage = false) {
+      const ep = getEpisode();
+      if (ep) ep.updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        currentEpisodeId: state.currentEpisodeId,
+        currentStage: state.currentStage,
+        episodes: state.episodes
+      }));
+      renderShell();
+      if (SERVER_ENABLED) syncWorkspace(false);
+      if (showMessage) toast("Workspace saved.");
+    }
+
+    function getEpisode() {
+      return state.episodes.find(ep => ep.id === state.currentEpisodeId);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function nl2br(value) {
+      return escapeHtml(value).replace(/\n/g, "<br>");
+    }
+
+    function field(path, label, options = {}) {
+      const ep = getEpisode();
+      const value = path.split(".").reduce((acc, key) => acc?.[key], ep) ?? "";
+      const id = path.replaceAll(".", "-");
+      const type = options.type || "textarea";
+      const hint = options.hint ? `<p class="hint">${escapeHtml(options.hint)}</p>` : "";
+      if (type === "input") {
+        return `<div class="field ${options.full ? "full" : ""}">
+          <label for="${id}">${escapeHtml(label)}</label>
+          <input id="${id}" data-path="${path}" value="${escapeHtml(value)}" placeholder="${escapeHtml(options.placeholder || "")}">
+          ${hint}
+        </div>`;
+      }
+      if (type === "select") {
+        const opts = options.options.map(opt => `<option value="${escapeHtml(opt.value)}" ${String(value) === String(opt.value) ? "selected" : ""}>${escapeHtml(opt.label)}</option>`).join("");
+        return `<div class="field ${options.full ? "full" : ""}">
+          <label for="${id}">${escapeHtml(label)}</label>
+          <select id="${id}" data-path="${path}">${opts}</select>
+          ${hint}
+        </div>`;
+      }
+      return `<div class="field ${options.full ? "full" : ""}">
+        <label for="${id}">${escapeHtml(label)}</label>
+        <textarea id="${id}" data-path="${path}" class="${options.long ? "long-textarea" : "short-textarea"}" placeholder="${escapeHtml(options.placeholder || "")}">${escapeHtml(value)}</textarea>
+        ${hint}
+      </div>`;
+    }
+
+    function setPath(path, value) {
+      const parts = path.split(".");
+      let target = getEpisode();
+      for (let i = 0; i < parts.length - 1; i++) target = target[parts[i]];
+      target[parts[parts.length - 1]] = value;
+    }
+
+    function completion(ep, stageId) {
+      if (stageId === "discover") {
+        return Boolean(ep.discover.centralQuestion && ep.discover.listenerOutcome);
+      }
+      if (stageId === "story") return Boolean(ep.story.draft || ep.story.answers.length >= 4);
+      if (stageId === "truth") return ep.truth.useScripture !== "undecided";
+      if (stageId === "build") return Boolean(ep.build.script);
+      if (stageId === "brotherhood") return Boolean(ep.brotherhood.content);
+      return false;
+    }
+
+    function renderShell() {
+      const ep = getEpisode();
+      document.getElementById("episodeSelect").innerHTML = state.episodes
+        .map(item => `<option value="${item.id}" ${item.id === ep.id ? "selected" : ""}>${escapeHtml(item.meta.title || "Untitled SBU Episode")}</option>`)
+        .join("");
+
+      document.getElementById("episodeList").innerHTML = state.episodes
+        .slice()
+        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+        .map(item => `<button class="episode-item ${item.id === ep.id ? "active" : ""}" data-episode-id="${item.id}">
+          <strong>${escapeHtml(item.meta.title || "Untitled SBU Episode")}</strong>
+          <span>${escapeHtml(item.discover.centralQuestion || "No central question yet")}</span>
+        </button>`)
+        .join("");
+
+      document.getElementById("stageNav").innerHTML = stages
+        .map((stage, index) => `<button class="stage-btn ${state.currentStage === stage.id ? "active" : ""}" data-stage="${stage.id}">
+          <span class="stage-num">${index + 1}</span>
+          <span><strong>${stage.name}</strong><br><span class="stage-status">${stage.short}</span></span>
+          <span class="stage-status">${completion(ep, stage.id) ? "Done" : "Open"}</span>
+        </button>`)
+        .join("");
+
+      const status = document.getElementById("systemStatus");
+      if (status) {
+        if (!SERVER_ENABLED) status.textContent = "Local file mode";
+        else if (!systemStatus.ok) status.textContent = "Server not connected";
+        else status.textContent = systemStatus.aiAvailable ? `AI on: ${systemStatus.model}` : "Local engines on";
+      }
+    }
+
+    function render() {
+      renderShell();
+      const panel = document.getElementById("stagePanel");
+      const stage = state.currentStage;
+      if (stage === "discover") panel.innerHTML = renderDiscover();
+      if (stage === "story") panel.innerHTML = renderStory();
+      if (stage === "truth") panel.innerHTML = renderTruth();
+      if (stage === "build") panel.innerHTML = renderBuild();
+      if (stage === "brotherhood") panel.innerHTML = renderBrotherhood();
+      bindPanelEvents();
+    }
+
+    function stageHeader(num, title, body) {
+      return `<div class="stage-header">
+        <div>
+          <div class="eyebrow">Stage ${num}</div>
+          <h2>${escapeHtml(title)}</h2>
+          <p>${escapeHtml(body)}</p>
+        </div>
+        <button class="btn small" data-action="save">Save</button>
+      </div>`;
+    }
+
+    function controls(prev, next) {
+      return `<div class="stage-controls">
+        <div class="left-controls">${prev ? `<button class="btn" data-goto="${prev}">Back</button>` : ""}</div>
+        <div class="right-controls">
+          <button class="btn" data-action="save">Save</button>
+          ${next ? `<button class="btn primary" data-goto="${next}">Next</button>` : ""}
+        </div>
+      </div>`;
+    }
+
+    function renderDiscover() {
+      return `${stageHeader(1, "Discover", "Find what this episode is really about before writing anything. Keep it simple, honest, and specific.")}
+        <div class="notice">Start with the question. The app will use these answers later to keep the episode from becoming generic advice.</div>
+        <div class="grid-2">
+          ${field("meta.episodeNumber", "Episode number", { type: "input", placeholder: "Example: 12" })}
+          ${field("meta.title", "Working episode title", { type: "input", placeholder: "Example: When You Feel Like You Failed" })}
+          <div class="field full">
+            <label>Episode title ideas</label>
+            <div class="pill-row">
+              <button class="btn small" data-action="generateTitleIdeas">Generate SBU Title Ideas</button>
+              ${(getEpisode().meta.titleIdeas || []).map(title => `<button class="btn small" data-title-choice="${escapeHtml(title)}">${escapeHtml(title)}</button>`).join("")}
+            </div>
+            <p class="hint">Pick one to make it the working title, or keep editing the title manually.</p>
+          </div>
+          ${field("discover.centralQuestion", "What is the ONE question this episode needs to answer?", { full: true, placeholder: "Example: What do you do when you feel like you have failed everyone who counted on you?" })}
+          ${field("discover.uncomfortableTruth", "What is the uncomfortable truth underneath that question?", { full: true })}
+          ${field("discover.whyItMatters", "Why does this matter to struggling men?", { full: true })}
+          ${field("discover.listenerRecognition", "What should the listener recognize about himself?", {})}
+          ${field("discover.listenerOutcome", "What should the listener understand differently by the end?", {})}
+          ${field("discover.emotionalJourney", "What emotional journey should the episode take him through?", { full: true })}
+          ${field("discover.coreTheme", "Core theme", { type: "input", placeholder: "Example: shame, isolation, failure, forgiveness, hope" })}
+        </div>
+        ${controls("", "story")}`;
+    }
+
+    function renderStory() {
+      const ep = getEpisode();
+      const q = storyQuestions[Math.min(ep.story.questionIndex, storyQuestions.length - 1)];
+      const done = ep.story.questionIndex >= storyQuestions.length;
+      const answersHtml = ep.story.answers.map((item, index) => `<div class="qa-item">
+        <b>${index + 1}. ${escapeHtml(item.question)}</b>
+        <p>${nl2br(item.answer)}</p>
+      </div>`).join("");
+      return `${stageHeader(2, "Story Finder", "Find a true story from Robert's life. This stage must not invent, exaggerate, or fill in personal details.")}
+        <div class="notice warning">Only write what actually happened. If a detail is missing, leave it missing until Robert supplies it.</div>
+        <div class="chat-box">
+          <div class="question-card">
+            <strong>${done ? "Story interview complete" : "Current question"}</strong>
+            <p>${escapeHtml(done ? "You can generate or revise the faithful story draft now." : q)}</p>
+          </div>
+          ${done ? "" : `<textarea id="storyAnswer" class="short-textarea" placeholder="Answer this one question in your own words."></textarea>
+          <button class="btn primary" data-action="answerStory">Save Answer and Ask Next</button>`}
+        </div>
+        <div class="qa-list">${answersHtml || `<div class="notice">No story answers yet.</div>`}</div>
+        <div class="subpanel full" style="margin-top:14px;">
+          <label for="storyDraft">Podcast-ready story draft</label>
+          <textarea id="storyDraft" data-path="story.draft" class="long-textarea" placeholder="Generate a draft after answering a few questions, then edit it here.">${escapeHtml(ep.story.draft)}</textarea>
+          <p class="hint">This draft is assembled only from the answers above. It should stay faithful to the real story.</p>
+          <div class="pill-row">
+            <button class="btn small" data-action="generateStoryDraft">Generate Faithful Story Draft</button>
+            <button class="btn small" data-action="engineStory">Use Server Story Engine</button>
+            <button class="btn small" data-action="resetStoryQuestion">Restart Story Interview</button>
+          </div>
+        </div>
+        ${controls("discover", "truth")}`;
+    }
+
+    function renderTruth() {
+      return `${stageHeader(3, "Truth / Bible Study", "Bring Scripture in only when it genuinely supports the conversation. This is encouragement, not a sermon.")}
+        <div class="grid-2">
+          ${field("truth.useScripture", "Should this episode include Scripture?", { type: "select", options: [
+            { value: "undecided", label: "Not decided yet" },
+            { value: "yes", label: "Yes, Scripture genuinely fits" },
+            { value: "skip", label: "Skip Scripture for this episode" },
+            { value: "explore", label: "Explore, but do not force it" }
+          ]})}
+          ${field("truth.translation", "Translation", { type: "select", options: [
+            { value: "NLT", label: "NLT" },
+            { value: "NIV", label: "NIV" },
+            { value: "ESV", label: "ESV" },
+            { value: "CSB", label: "CSB" },
+            { value: "KJV", label: "KJV" }
+          ]})}
+          ${field("truth.scripture", "Primary Scripture", { type: "input", placeholder: "Example: Psalm 34:18" })}
+          ${field("truth.whyItFits", "Why this passage actually fits the episode", {})}
+          ${field("truth.plainMeaning", "Plain-language meaning", {})}
+          ${field("truth.context", "Historical / cultural context", {})}
+          ${field("truth.crossReferences", "Relevant cross-references", {})}
+          ${field("truth.application", "Real-life application", {})}
+          ${field("truth.notes", "Notes or cautions", { full: true, placeholder: "Example: Do not make this sound like a quick fix. Keep it gentle." })}
+        </div>
+        <div class="pill-row">
+          <button class="btn small" data-action="suggestScripture">Suggest Scripture Ideas From Theme</button>
+          <button class="btn small" data-action="engineTruth">Use Server Truth Engine</button>
+          <button class="btn small" data-action="markNoScripture">Mark Scripture as Not Forced</button>
+        </div>
+        ${controls("story", "build")}`;
+    }
+
+    function renderBuild() {
+      const ep = getEpisode();
+      const quality = ep.build.quality.length ? renderQuality(ep.build.quality) : `<div class="notice">Generate the episode, then run the SBU Quality Check.</div>`;
+      return `${stageHeader(4, "Build the Episode", "Use the Discover, Story, and Truth work to create the full SBU story-first episode.")}
+        <div class="grid-3">
+          ${field("build.hostName", "Host name", { type: "input" })}
+          ${field("meta.targetLength", "Target length", { type: "select", options: [
+            { value: "15", label: "About 15 minutes" },
+            { value: "30", label: "About 30 minutes" },
+            { value: "45", label: "About 45 minutes" },
+            { value: "60", label: "About 60 minutes" }
+          ]})}
+          ${field("meta.audience", "Audience", { type: "input" })}
+        </div>
+        <div class="pill-row">
+          <button class="btn primary" data-action="generateEpisode">Generate 12-Part SBU Episode</button>
+          <button class="btn" data-action="engineEpisode">Use Server Episode Engine</button>
+          <button class="btn" data-action="qualityCheck">Run SBU Quality Check</button>
+          <button class="btn" data-action="engineQuality">Use Server Quality Engine</button>
+          <button class="btn" data-action="copyScript">Copy Script</button>
+          <button class="btn" data-action="downloadTxt">Download .txt</button>
+          <button class="btn" data-action="downloadDoc">Download .doc</button>
+        </div>
+        <div class="subpanel full" style="margin-top:14px;">
+          <label for="episodeScript">Episode script</label>
+          <textarea id="episodeScript" data-path="build.script" class="long-textarea" placeholder="Generated episode will appear here.">${escapeHtml(ep.build.script)}</textarea>
+        </div>
+        <div class="subpanel full" style="margin-top:14px;">
+          <h3>SBU Quality Check</h3>
+          ${quality}
+        </div>
+        ${controls("truth", "brotherhood")}`;
+    }
+
+    function renderBrotherhood() {
+      const ep = getEpisode();
+      return `${stageHeader(5, "Brotherhood", "Turn the episode into a week of honest conversation, reflection, and connection.")}
+        <div class="notice">This content should build brotherhood, not just market the episode.</div>
+        <div class="pill-row">
+          <button class="btn primary" data-action="generateBrotherhood">Generate Brotherhood Content</button>
+          <button class="btn" data-action="engineBrotherhood">Use Server Community Engine</button>
+          <button class="btn" data-action="copyBrotherhood">Copy Content</button>
+          <button class="btn" data-action="downloadBrotherhood">Download Content</button>
+        </div>
+        <div class="subpanel full" style="margin-top:14px;">
+          <label for="brotherhoodContent">Community content</label>
+          <textarea id="brotherhoodContent" data-path="brotherhood.content" class="long-textarea" placeholder="Discussion questions, journal prompts, social content, weekly challenge, and next conversation starter will appear here.">${escapeHtml(ep.brotherhood.content)}</textarea>
+        </div>
+        ${controls("build", "")}`;
+    }
+
+    function bindPanelEvents() {
+      document.querySelectorAll("[data-path]").forEach(el => {
+        el.addEventListener("input", event => {
+          setPath(event.target.dataset.path, event.target.type === "checkbox" ? event.target.checked : event.target.value);
+          save();
+        });
+      });
+    }
+
+    function bindGlobalEvents() {
+      document.body.addEventListener("click", event => {
+        const target = event.target.closest("button");
+        if (!target) return;
+        const stage = target.dataset.stage;
+        const goto = target.dataset.goto;
+        const action = target.dataset.action;
+        const episodeId = target.dataset.episodeId;
+        const titleChoice = target.dataset.titleChoice;
+        if (stage) {
+          state.currentStage = stage;
+          save();
+          render();
+        }
+        if (goto) {
+          state.currentStage = goto;
+          save();
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        if (episodeId) {
+          state.currentEpisodeId = episodeId;
+          save();
+          render();
+        }
+        if (titleChoice) {
+          getEpisode().meta.title = titleChoice;
+          save(true);
+          render();
+        }
+        if (action) handleAction(action);
+      });
+
+      document.getElementById("episodeSelect").addEventListener("change", event => {
+        state.currentEpisodeId = event.target.value;
+        save();
+        render();
+      });
+      document.getElementById("saveBtn").addEventListener("click", () => save(true));
+      document.getElementById("syncBtn").addEventListener("click", () => syncWorkspace(true));
+      document.getElementById("newEpisodeBtn").addEventListener("click", () => {
+        const ep = createEpisode();
+        state.episodes.push(ep);
+        state.currentEpisodeId = ep.id;
+        state.currentStage = "discover";
+        save(true);
+        render();
+      });
+      document.getElementById("deleteEpisodeBtn").addEventListener("click", () => {
+        if (state.episodes.length === 1) {
+          toast("Keep at least one episode in the workspace.");
+          return;
+        }
+        const ep = getEpisode();
+        const ok = confirm(`Delete "${ep.meta.title || "Untitled SBU Episode"}"?`);
+        if (!ok) return;
+        state.episodes = state.episodes.filter(item => item.id !== ep.id);
+        state.currentEpisodeId = state.episodes[0].id;
+        save(true);
+        render();
+      });
+      document.getElementById("exportJsonBtn").addEventListener("click", exportWorkspace);
+    }
+
+    function handleAction(action) {
+      if (action === "save") save(true);
+      if (action === "answerStory") answerStory();
+      if (action === "generateTitleIdeas") generateTitleIdeas();
+      if (action === "generateStoryDraft") generateStoryDraft();
+      if (action === "engineStory") runEngine("story");
+      if (action === "resetStoryQuestion") resetStoryQuestion();
+      if (action === "suggestScripture") suggestScripture();
+      if (action === "engineTruth") runEngine("truth");
+      if (action === "markNoScripture") markNoScripture();
+      if (action === "generateEpisode") generateEpisode();
+      if (action === "engineEpisode") runEngine("episode");
+      if (action === "qualityCheck") qualityCheck(true);
+      if (action === "engineQuality") runEngine("quality");
+      if (action === "copyScript") copyText(getEpisode().build.script, "Script copied.");
+      if (action === "downloadTxt") downloadFile(fileBase() + "-episode.txt", getEpisode().build.script, "text/plain");
+      if (action === "downloadDoc") downloadDoc();
+      if (action === "generateBrotherhood") generateBrotherhood();
+      if (action === "engineBrotherhood") runEngine("brotherhood");
+      if (action === "copyBrotherhood") copyText(getEpisode().brotherhood.content, "Brotherhood content copied.");
+      if (action === "downloadBrotherhood") downloadFile(fileBase() + "-brotherhood.txt", getEpisode().brotherhood.content, "text/plain");
+    }
+
+    function answerStory() {
+      const ep = getEpisode();
+      const input = document.getElementById("storyAnswer");
+      const answer = input.value.trim();
+      if (!answer) {
+        toast("Answer the current story question first.");
+        return;
+      }
+      ep.story.answers.push({
+        question: storyQuestions[ep.story.questionIndex],
+        answer
+      });
+      ep.story.questionIndex += 1;
+      save(true);
+      render();
+    }
+
+    function generateTitleIdeas() {
+      const ep = getEpisode();
+      const theme = ep.discover.coreTheme || "the struggle";
+      const question = ep.discover.centralQuestion || "the question no man wants to ask out loud";
+      const cleanQuestion = question.replace(/[?!.]+$/g, "");
+      ep.meta.titleIdeas = [
+        `When ${capitalize(theme)} Gets Heavy`,
+        `The Question Under the Struggle`,
+        `You Do Not Have to Carry This Alone`,
+        `What If Strength Is Telling the Truth`,
+        `Still Standing`,
+        cleanQuestion.length < 64 ? cleanQuestion : `The Truth Beneath ${capitalize(theme)}`
+      ];
+      if (!ep.meta.title || ep.meta.title === "Untitled SBU Episode") ep.meta.title = ep.meta.titleIdeas[0];
+      save(true);
+      render();
+    }
+
+    function capitalize(value) {
+      const text = String(value || "").trim();
+      return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+    }
+
+    function generateStoryDraft() {
+      const ep = getEpisode();
+      if (!ep.story.answers.length) {
+        toast("Answer a few story questions first.");
+        return;
+      }
+      const parts = ep.story.answers.map(item => item.answer.trim()).filter(Boolean);
+      ep.story.draft = [
+        "Robert's real story draft:",
+        "",
+        parts.join("\n\n"),
+        "",
+        "Connection to the episode:",
+        ep.story.answers.at(-1)?.answer || "Add the connection after the interview is complete.",
+        "",
+        "Integrity note: This draft only uses details Robert entered in the Story Finder. Do not add facts, motives, dialogue, locations, or outcomes unless Robert supplies them."
+      ].join("\n");
+      save(true);
+      render();
+    }
+
+    function resetStoryQuestion() {
+      const ok = confirm("Restart the story interview? Existing answers will stay, but the next question will return to the beginning.");
+      if (!ok) return;
+      getEpisode().story.questionIndex = 0;
+      save(true);
+      render();
+    }
+
+    function suggestScripture() {
+      const ep = getEpisode();
+      const theme = `${ep.discover.coreTheme} ${ep.discover.centralQuestion}`.toLowerCase();
+      let suggestion = "Psalm 34:18";
+      let reason = "This passage speaks gently to men who feel brokenhearted or crushed without pretending pain disappears quickly.";
+      if (theme.includes("shame") || theme.includes("failure")) {
+        suggestion = "Romans 8:1";
+        reason = "This passage fits when the episode is dealing with shame, condemnation, and the fear that failure gets the final word.";
+      } else if (theme.includes("alone") || theme.includes("isolation")) {
+        suggestion = "Ecclesiastes 4:9-10";
+        reason = "This passage fits the brotherhood theme because it names the danger of falling alone and the strength of having someone beside you.";
+      } else if (theme.includes("fear")) {
+        suggestion = "Isaiah 41:10";
+        reason = "This passage can support a fear episode if it is handled as God being present with us, not as pressure to pretend we are fearless.";
+      } else if (theme.includes("forgive")) {
+        suggestion = "Colossians 3:13";
+        reason = "This passage fits a forgiveness episode if the conversation stays honest about pain, repair, and responsibility.";
+      }
+      ep.truth.useScripture = "explore";
+      ep.truth.scripture = ep.truth.scripture || suggestion;
+      ep.truth.whyItFits = ep.truth.whyItFits || reason;
+      ep.truth.plainMeaning = ep.truth.plainMeaning || "Say this in plain language Robert would actually use. Keep it grounded, honest, and connected to the story.";
+      ep.truth.notes = ep.truth.notes || "Do not force this passage. If the episode does not naturally need Scripture, skip it.";
+      save(true);
+      render();
+    }
+
+    async function checkServerStatus() {
+      if (!SERVER_ENABLED) {
+        renderShell();
+        return;
+      }
+      try {
+        const res = await fetch("/api/status");
+        systemStatus = await res.json();
+      } catch {
+        systemStatus = { ok: false, aiAvailable: false };
+      }
+      renderShell();
+    }
+
+    async function syncWorkspace(showMessage) {
+      if (!SERVER_ENABLED) {
+        if (showMessage) toast("Open through the local server to sync to disk.");
+        return;
+      }
+      try {
+        const payload = {
+          currentEpisodeId: state.currentEpisodeId,
+          currentStage: state.currentStage,
+          episodes: state.episodes
+        };
+        await fetch("/api/workspace", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ workspace: payload })
+        });
+        if (showMessage) toast("Workspace synced to disk.");
+      } catch {
+        if (showMessage) toast("Disk sync failed. Browser save still works.");
+      }
+    }
+
+    async function runEngine(engine) {
+      if (!SERVER_ENABLED) {
+        toast("Start the local server to use server engines.");
+        return;
+      }
+      const ep = getEpisode();
+      toast("Running SBU engine...");
+      try {
+        const res = await fetch(`/api/engine/${engine}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ episode: ep })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "Engine failed");
+        applyEngineResult(engine, result.text || "");
+        save(true);
+        render();
+        toast(result.mode === "ai" ? "AI engine complete." : "Local engine complete.");
+      } catch (error) {
+        toast(error.message || "Engine failed.");
+      }
+    }
+
+    function applyEngineResult(engine, text) {
+      const ep = getEpisode();
+      if (engine === "story") {
+        ep.story.draft = text;
+      } else if (engine === "truth") {
+        ep.truth.notes = text;
+        if (ep.truth.useScripture === "undecided") ep.truth.useScripture = "explore";
+      } else if (engine === "episode") {
+        ep.build.script = text;
+        qualityCheck(false);
+      } else if (engine === "brotherhood") {
+        ep.brotherhood.content = text;
+      } else if (engine === "quality") {
+        ep.build.quality = text.split("\n").filter(Boolean).map(line => ({
+          label: line,
+          pass: /^pass/i.test(line),
+          fix: line
+        }));
+      }
+    }
+
+    function markNoScripture() {
+      const ep = getEpisode();
+      ep.truth.useScripture = "skip";
+      ep.truth.notes = "Scripture is not being forced into this episode. The conversation can still be honest, hopeful, and aligned with SBU values.";
+      save(true);
+      render();
+    }
+
+    function generateEpisode() {
+      const ep = getEpisode();
+      const d = ep.discover;
+      const t = ep.truth;
+      const host = ep.build.hostName || "Robert";
+      const title = ep.meta.title || "Untitled SBU Episode";
+      const story = ep.story.draft.trim();
+      const hasStory = Boolean(story);
+      const scriptureBlock = t.useScripture === "yes" || t.useScripture === "explore"
+        ? `Primary Scripture: ${t.scripture || "[Choose passage]"} (${t.translation})\nPlain-language meaning: ${t.plainMeaning || "[Add plain-language meaning]"}\nWhy it fits: ${t.whyItFits || "[Explain genuine connection]"}\nApplication: ${t.application || "[Add real-life application]"}`
+        : "No Scripture is forced into this episode. If a passage does not genuinely fit, the episode should stay focused on honest conversation and hope.";
+
+      const script = [
+        `STRUGGLING BROTHERS UNITED`,
+        `Real Men. Real Struggles. Real Hope.`,
+        `Episode ${ep.meta.episodeNumber || "[Episode #]"} - ${title}`,
+        `Host: ${host}`,
+        `Target length: about ${ep.meta.targetLength} minutes`,
+        ``,
+        `1. COLD OPEN`,
+        hasStory
+          ? `Start inside the real story. Do not explain everything yet.\n\n${story}`
+          : `[STORY NEEDED]\nBefore this episode is final, Robert needs to add a real personal story. Do not invent one.`,
+        ``,
+        `2. TEASER QUESTIONS`,
+        `Have you ever carried something so heavy that you did not know how to say it out loud?\nWhat do you do when the question underneath the struggle will not leave you alone?\n${d.centralQuestion || "[Add the central question from Discover.]"}`,
+        ``,
+        `3. SBU INTRODUCTION`,
+        `${host}: Welcome back to Struggling Brothers United. This is a place for real men, real struggles, and real hope. Today I want to talk about ${d.coreTheme || "something a lot of men carry quietly"}. Not from a mountaintop. From the middle of it.`,
+        ``,
+        `4. CONNECT THE STORY`,
+        `The reason I am telling you that story is because ${d.whyItMatters || "[explain why this matters to struggling men]"}. It points us toward this question: ${d.centralQuestion || "[central question]"}`,
+        ``,
+        `5. THE REAL CONVERSATION`,
+        `What is happening beneath the surface is this: ${d.uncomfortableTruth || "[name the uncomfortable truth]"}. A lot of men do not need another speech about being tougher. They need room to be honest about what they are carrying and enough courage to not carry it alone.`,
+        ``,
+        `6. DEEPER TRUTH`,
+        `The deeper truth is not that everything is easy. It is that struggle does not have to become isolation. ${d.listenerRecognition || "[what the listener should recognize about himself]"} By the end, I want him to understand this differently: ${d.listenerOutcome || "[desired listener outcome]"}`,
+        ``,
+        `7. SCRIPTURE`,
+        scriptureBlock,
+        ``,
+        `8. ROBERT'S REFLECTION`,
+        `I am not saying this because I have mastered it. I am saying it because I have been there. There are moments when a man can look fine on the outside and still be fighting a war nobody sees. If that is you, this episode is not here to shame you. It is here to sit with you and tell the truth.`,
+        ``,
+        `9. PRACTICAL NEXT STEPS`,
+        `Name the struggle honestly.\nTell one trusted brother the truth instead of editing it down.\nTake one small next step that matches reality, not a fantasy version of your life.\nCome back to the question and ask what is true, not just what is loud.`,
+        ``,
+        `10. BROTHERHOOD CHALLENGE`,
+        `This week, reach out to one man and say one honest sentence you would normally keep to yourself. You do not have to turn it into a big speech. Just do not face it alone.`,
+        ``,
+        `11. CIRCLE BACK`,
+        hasStory
+          ? `Return to the opening story. Now the listener should understand that moment differently: not just as a hard memory, but as a doorway into the truth of the episode.`
+          : `[CIRCLE BACK BLOCKED]\nA real opening story is required before this section can work.`,
+        ``,
+        `12. HOPEFUL CLOSE`,
+        `Brother, if you are still standing, the story is not over. You do not have to pretend you are strong all the time. The strongest men are not the ones who never struggle. They are the ones who refuse to struggle alone.`,
+        ``,
+        `SHOW NOTES`,
+        `In this episode of Struggling Brothers United, ${host} explores ${d.centralQuestion || "a question many men carry quietly"}. This conversation is honest, practical, and rooted in the belief that no man should have to struggle alone.`,
+        ``,
+        `CHAPTER TIMESTAMPS`,
+        `00:00 - Cold Open`,
+        `02:00 - Teaser Questions`,
+        `04:00 - SBU Introduction`,
+        `06:00 - The Real Conversation`,
+        `14:00 - Deeper Truth`,
+        `20:00 - Scripture and Reflection`,
+        `25:00 - Practical Next Steps`,
+        `28:00 - Brotherhood Challenge and Hopeful Close`
+      ].join("\n");
+
+      ep.build.script = script;
+      qualityCheck(false);
+      save(true);
+      render();
+    }
+
+    function qualityCheck(showToast) {
+      const ep = getEpisode();
+      const script = ep.build.script || "";
+      const truthUsed = ep.truth.useScripture;
+      ep.build.quality = [
+        check("Real human story is present", Boolean(ep.story.draft.trim()), "Add or approve a real story in Story Finder. Do not invent one."),
+        check("Central question is clear", Boolean(ep.discover.centralQuestion.trim()), "Add the one question this episode answers."),
+        check("Story connects to the episode", Boolean(ep.discover.whyItMatters.trim()), "Explain why the story matters to struggling men."),
+        check("Scripture is not forced", truthUsed === "skip" || Boolean(ep.truth.whyItFits.trim()), "Explain why the passage fits, or mark Scripture as skipped."),
+        check("Episode circles back to the opening", script.includes("11. CIRCLE BACK") && !script.includes("[CIRCLE BACK BLOCKED]"), "Add the real story so the ending can return to it."),
+        check("Practical next step is included", script.includes("9. PRACTICAL NEXT STEPS"), "Generate or add practical next steps."),
+        check("Brotherhood challenge is included", script.includes("10. BROTHERHOOD CHALLENGE"), "Generate or add a brotherhood challenge."),
+        check("Hopeful close is included", script.includes("12. HOPEFUL CLOSE"), "Generate or add the hopeful close.")
+      ];
+      save(false);
+      if (showToast) {
+        toast("Quality check complete.");
+        render();
+      }
+    }
+
+    function check(label, pass, fix) {
+      return { label, pass, fix };
+    }
+
+    function renderQuality(items) {
+      return `<div class="quality-list">${items.map(item => `<div class="quality-item ${item.pass ? "pass" : "fail"}">
+        <div class="mark">${item.pass ? "✓" : "!"}</div>
+        <div><strong>${escapeHtml(item.label)}</strong><br><span class="stage-status">${escapeHtml(item.pass ? "Pass" : item.fix)}</span></div>
+      </div>`).join("")}</div>`;
+    }
+
+    function generateBrotherhood() {
+      const ep = getEpisode();
+      const q = ep.discover.centralQuestion || "What are you carrying that you do not want to carry alone?";
+      const theme = ep.discover.coreTheme || "honest struggle and hope";
+      ep.brotherhood.content = [
+        `SBU BROTHERHOOD CONTENT`,
+        `Episode: ${ep.meta.title || "Untitled SBU Episode"}`,
+        ``,
+        `DISCUSSION QUESTIONS`,
+        `1. Where did this episode hit closest to your real life?`,
+        `2. What part of this struggle do men usually hide?`,
+        `3. ${q}`,
+        `4. What would it look like to let another brother into this instead of handling it alone?`,
+        `5. What is one honest sentence you need to say this week?`,
+        ``,
+        `JOURNAL PROMPTS`,
+        `1. I have been carrying...`,
+        `2. The part I usually do not say out loud is...`,
+        `3. I am afraid that if people knew the truth, they would...`,
+        `4. One step I can actually take from here is...`,
+        `5. The brother I could reach out to is...`,
+        ``,
+        `SOCIAL POST`,
+        `A lot of men are not looking for a lecture. They are looking for a place where they can finally tell the truth. This week's SBU episode is about ${theme}, and the reminder is simple: you do not have to struggle alone.`,
+        ``,
+        `SHORTS / REELS PROMPT`,
+        `Start with: "What if strength is not pretending you are fine?"`,
+        `Then connect it to the episode question: "${q}"`,
+        `Close with: "Real strength is found in brotherhood."`,
+        ``,
+        `EMAIL / COMMUNITY MESSAGE`,
+        `Brother, this week's episode is not about having all the answers. It is about being honest enough to ask the question most men keep buried: ${q} If this one connects with you, do not sit with it alone. Bring it into the group. Say the honest thing.`,
+        ``,
+        `WEEKLY CHALLENGE`,
+        `Reach out to one trusted man this week and tell him one true sentence about what you are carrying. Then report back with one word: "sent."`,
+        ``,
+        `NEXT CONVERSATION STARTER`,
+        `What changes when a man finally stops pretending he is fine?`
+      ].join("\n");
+      save(true);
+      render();
+    }
+
+    async function copyText(text, message) {
+      if (!text) {
+        toast("Nothing to copy yet.");
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          toast(message);
+          return;
+        } catch {}
+      }
+      const helper = document.createElement("textarea");
+      helper.value = text;
+      helper.style.position = "fixed";
+      helper.style.left = "-9999px";
+      document.body.appendChild(helper);
+      helper.focus();
+      helper.select();
+      document.execCommand("copy");
+      helper.remove();
+      toast(message);
+    }
+
+    function fileBase() {
+      const ep = getEpisode();
+      return (ep.meta.title || "sbu-episode").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "sbu-episode";
+    }
+
+    function downloadFile(filename, text, type) {
+      if (!text) {
+        toast("Nothing to download yet.");
+        return;
+      }
+      const blob = new Blob([text], { type });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function downloadDoc() {
+      const script = getEpisode().build.script;
+      if (!script) {
+        toast("Generate the script first.");
+        return;
+      }
+      const html = `<html><head><meta charset="utf-8"></head><body><pre style="white-space:pre-wrap;font-family:Calibri,Arial,sans-serif;">${escapeHtml(script)}</pre></body></html>`;
+      downloadFile(fileBase() + "-episode.doc", "\ufeff" + html, "application/msword");
+    }
+
+    function exportWorkspace() {
+      downloadFile("sbu-episode-workspace.json", JSON.stringify(getEpisode(), null, 2), "application/json");
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    load();
+    bindGlobalEvents();
+    render();
+    checkServerStatus();
+    setInterval(() => save(false), 20000);
+  </script>
+</body>
+</html>
